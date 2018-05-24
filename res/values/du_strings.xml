@@ -144,7 +144,13 @@
     <!-- Search -->
     <string name="menu_search">Search apps</string>
     <string name="menu_search_hint">Search apps\u2026</string>
-	<!-- Connected AP Signal Preference -->
+
+    <!-- Connected AP Signal Preference -->
     <string name="connected_signal_pref_title">Signal strength: %1$s</string>
     <string name="connected_signal_pref_summary">Tap for more info</string>
+
+    <!-- Screenshot sound -->
+    <string name="screenshot_sound_title">Screenshot sound</string>
+    <string name="screenshot_sound_summary">Plays sound effect when screenshot is taken</string>
+
 </resources>

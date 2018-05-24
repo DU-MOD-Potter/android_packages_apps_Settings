@@ -132,6 +132,12 @@
           android:title="@string/vibration_on_charge_state_changed_title"
           android:defaultValue="true" />
 
+        <!-- Screenshot sound -->
+        <com.dirtyunicorns.tweaks.preferences.SystemSettingSwitchPreference
+          android:key="screenshot_sound"
+          android:title="@string/screenshot_sound_title"
+          android:defaultValue="true" />
+
         <!-- Docking sounds -->
         <SwitchPreference
           android:key="docking_sounds"
