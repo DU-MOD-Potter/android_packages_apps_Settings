@@ -122,6 +122,7 @@ public class ManageApplications extends InstrumentedPreferenceFragment
 
     private static final String EXTRA_SORT_ORDER = "sortOrder";
     private static final String EXTRA_SHOW_SYSTEM = "showSystem";
+    private static final String EXTRA_SHOW_SUBSTRATUM = "showSubstratum";
     private static final String EXTRA_HAS_ENTRIES = "hasEntries";
     private static final String EXTRA_HAS_BRIDGE = "hasBridge";
 
@@ -216,6 +217,7 @@ public class ManageApplications extends InstrumentedPreferenceFragment
         // Apps that are trusted sources of apks
         FILTER_LABELS[FILTER_APPS_INSTALL_SOURCES] = R.string.filter_install_sources_apps;
         FILTERS[FILTER_APPS_INSTALL_SOURCES] = AppStateInstallAppsBridge.FILTER_APP_SOURCES;
+
     }
 
     // Storage types. Used to determine what the extra item in the list of preferences is.
@@ -231,6 +233,9 @@ public class ManageApplications extends InstrumentedPreferenceFragment
 
     // whether showing system apps.
     private boolean mShowSystem;
+
+    // whether showing substratum overlays.
+    private boolean mShowSubstratum;
 
     private ApplicationsState mApplicationsState;
 
@@ -348,6 +353,7 @@ public class ManageApplications extends InstrumentedPreferenceFragment
         if (savedInstanceState != null) {
             mSortOrder = savedInstanceState.getInt(EXTRA_SORT_ORDER, mSortOrder);
             mShowSystem = savedInstanceState.getBoolean(EXTRA_SHOW_SYSTEM, mShowSystem);
+            mShowSubstratum = savedInstanceState.getBoolean(EXTRA_SHOW_SUBSTRATUM, mShowSubstratum);
         }
 
         mInvalidSizeStr = getActivity().getText(R.string.invalid_size_value);
@@ -560,6 +566,7 @@ public class ManageApplications extends InstrumentedPreferenceFragment
         mResetAppsHelper.onSaveInstanceState(outState);
         outState.putInt(EXTRA_SORT_ORDER, mSortOrder);
         outState.putBoolean(EXTRA_SHOW_SYSTEM, mShowSystem);
+        outState.putBoolean(EXTRA_SHOW_SUBSTRATUM, mShowSubstratum);
         outState.putBoolean(EXTRA_HAS_ENTRIES, mApplications.mHasReceivedLoadEntries);
         outState.putBoolean(EXTRA_HAS_BRIDGE, mApplications.mHasReceivedBridgeCallback);
     }
@@ -717,6 +724,11 @@ public class ManageApplications extends InstrumentedPreferenceFragment
                 && mListType != LIST_TYPE_HIGH_POWER);
 
         mOptionsMenu.findItem(R.id.reset_app_preferences).setVisible(mListType == LIST_TYPE_MAIN);
+
+        mOptionsMenu.findItem(R.id.show_substratum).setVisible(!mShowSubstratum
+                && mListType != LIST_TYPE_HIGH_POWER);
+        mOptionsMenu.findItem(R.id.hide_substratum).setVisible(mShowSubstratum
+                && mListType != LIST_TYPE_HIGH_POWER);
     }
 
     @Override
@@ -736,6 +748,11 @@ public class ManageApplications extends InstrumentedPreferenceFragment
             case R.id.show_system:
             case R.id.hide_system:
                 mShowSystem = !mShowSystem;
+                mApplications.rebuild(false);
+                break;
+            case R.id.show_substratum:
+            case R.id.hide_substratum:
+                mShowSubstratum = !mShowSubstratum;
                 mApplications.rebuild(false);
                 break;
             case R.id.reset_app_preferences:
@@ -1073,7 +1090,7 @@ public class ManageApplications extends InstrumentedPreferenceFragment
             if (mCompositeFilter != null) {
                 filterObj = new CompoundFilter(filterObj, mCompositeFilter);
             }
-            if (!mManageApplications.mShowSystem) {
+            if (!mManageApplications.mShowSystem && !mManageApplications.mShowSubstratum) {
                 if (LIST_TYPES_WITH_INSTANT.contains(mManageApplications.mListType)) {
                     filterObj = new CompoundFilter(filterObj,
                             ApplicationsState.FILTER_DOWNLOADED_AND_LAUNCHER_AND_INSTANT);
@@ -1081,7 +1098,21 @@ public class ManageApplications extends InstrumentedPreferenceFragment
                     filterObj = new CompoundFilter(filterObj,
                             ApplicationsState.FILTER_DOWNLOADED_AND_LAUNCHER);
                 }
+                filterObj = new CompoundFilter(filterObj,
+                        ApplicationsState.FILTER_SUBSTRATUM);
+            } else if (!mManageApplications.mShowSystem) {
+                if (LIST_TYPES_WITH_INSTANT.contains(mManageApplications.mListType)) {
+                    filterObj = new CompoundFilter(filterObj,
+                            ApplicationsState.FILTER_DOWNLOADED_AND_LAUNCHER_AND_INSTANT);
+                } else {
+                    filterObj = new CompoundFilter(filterObj,
+                            ApplicationsState.FILTER_DOWNLOADED_AND_LAUNCHER);
+                }
+            } else if (!mManageApplications.mShowSubstratum) {
+                filterObj = new CompoundFilter(filterObj,
+                        ApplicationsState.FILTER_SUBSTRATUM);
             }
+
             switch (mLastSortMode) {
                 case R.id.sort_order_size:
                     switch (mWhichSize) {
